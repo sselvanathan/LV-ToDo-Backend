@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Resources\TodoResource;
 use App\Models\Todo;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use JetBrains\PhpStorm\Pure;
@@ -30,7 +29,7 @@ class TodoController extends Controller
      *
      * @return TodoResource
      */
-    public function store(StoreTodoRequest $request)
+    public function store(StoreTodoRequest $request): TodoResource
     {
         return new TodoResource(Todo::create($request->validated()));
     }
@@ -50,14 +49,16 @@ class TodoController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param   Request  $request
-     * @param   Todo     $todo
+     * @param   StoreTodoRequest  $request
+     * @param   Todo              $todo
      *
-     * @return Response
+     * @return TodoResource
      */
-    public function update(Request $request, Todo $todo)
+    public function update(StoreTodoRequest $request, Todo $todo): TodoResource
     {
-        //
+        $todo->update($request->validated());
+
+        return new TodoResource($todo);
     }
 
     /**
@@ -67,8 +68,10 @@ class TodoController extends Controller
      *
      * @return Response
      */
-    public function destroy(Todo $todo)
+    public function destroy(Todo $todo): Response
     {
-        //
+        $todo->delete();
+
+        return response()->noContent();
     }
 }
