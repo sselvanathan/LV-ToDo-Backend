@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use JetBrains\PhpStorm\ArrayShape;
 
 class StoreTodoRequest extends FormRequest
 {
@@ -21,9 +23,13 @@ class StoreTodoRequest extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    #[ArrayShape(['id' => "array", 'name' => "string"])] public function rules(): array
     {
         return [
+            'id' => ['required',
+                Rule::exists('todos')
+                    ->where('user_id', auth()->id())
+            ],
             'name' => 'required',
         ];
     }

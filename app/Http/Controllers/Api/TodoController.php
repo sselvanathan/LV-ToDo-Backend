@@ -7,7 +7,7 @@ use App\Http\Requests\StoreTodoRequest;
 use App\Http\Resources\TodoResource;
 use App\Models\Todo;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Http\Response;
+use Illuminate\Http\Response as HttpResponse;
 use JetBrains\PhpStorm\Pure;
 
 class TodoController extends Controller
@@ -17,9 +17,9 @@ class TodoController extends Controller
      *
      * @return AnonymousResourceCollection
      */
-    public function index()
+    public function index(): AnonymousResourceCollection
     {
-        return TodoResource::collection(Todo::select('id','name')->get());
+        return TodoResource::collection(Todo::all());
     }
 
     /**
@@ -31,7 +31,9 @@ class TodoController extends Controller
      */
     public function store(StoreTodoRequest $request): TodoResource
     {
-        return new TodoResource(Todo::create($request->validated()));
+        $todo = auth()->user()->todos()->create($request->validated());
+
+        return new TodoResource($todo);
     }
 
     /**
@@ -43,6 +45,10 @@ class TodoController extends Controller
      */
     #[Pure] public function show(Todo $todo): TodoResource
     {
+        if ($todo->user_id !== auth()->id()){
+            abort(Response::HTTP_UNAUTHORIZED);
+        }
+
         return new TodoResource($todo);
     }
 
@@ -66,9 +72,9 @@ class TodoController extends Controller
      *
      * @param   Todo  $todo
      *
-     * @return Response
+     * @return HttpResponse
      */
-    public function destroy(Todo $todo): Response
+    public function destroy(Todo $todo): HttpResponse
     {
         $todo->delete();
 
