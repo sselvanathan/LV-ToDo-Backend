@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -23,15 +25,18 @@ class AuthController extends Controller
             ]
         );
 
+        $deviceName = $request->device_name;
+
         $user = User::create(
             [
                 'name'     => $request->name,
                 'email'    => $request->email,
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
+                'device_name' => $deviceName,
             ]
         );
 
-        return $user->createToken($request->device_name)->plainTextToken;
+        return $user->createToken($deviceName)->plainTextToken;
     }
 
     /**

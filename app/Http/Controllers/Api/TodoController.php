@@ -1,37 +1,56 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTodoRequest;
 use App\Http\Resources\TodoResource;
 use App\Models\Todo;
+use \Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response as HttpResponse;
-use JetBrains\PhpStorm\Pure;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class TodoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource based by userId.
      *
      * @return AnonymousResourceCollection
      */
     public function index(): AnonymousResourceCollection
     {
-        return TodoResource::collection(Todo::all());
+        $userId = auth()->id();
+        $todos = Todo::query()
+            ->select(
+                [
+                    'id',
+                    'user_id',
+                    'name'
+                ])
+            ->where('user_id', $userId)
+            ->get();
+
+        return TodoResource::collection($todos);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param   StoreTodoRequest  $request
      *
+     * @param Request $request
      * @return TodoResource
      */
-    public function store(StoreTodoRequest $request): TodoResource
+    public function store(Request $request): TodoResource
     {
-        $todo = auth()->user()->todos()->create($request->validated());
+        $todo = new Todo();
+        $todo->name = $request->input('name');
+        $todo->user_id = Auth::id();
+        $todo->save();
+
 
         return new TodoResource($todo);
     }
@@ -43,7 +62,7 @@ class TodoController extends Controller
      *
      * @return TodoResource
      */
-    #[Pure] public function show(Todo $todo): TodoResource
+    public function show(Todo $todo): TodoResource
     {
         if ($todo->user_id !== auth()->id()){
             abort(Response::HTTP_UNAUTHORIZED);
